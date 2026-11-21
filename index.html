@@ -1,1253 +1,191 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Security Company Manager</title>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GuardOps – Security Management</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
-:root{
-  --primary:#1e3a5f;--primary-dark:#152a45;--accent:#e67e22;--success:#27ae60;
-  --danger:#c0392b;--warn:#f39c12;--bg:#f5f7fa;--card:#fff;--text:#2c3e50;
-  --muted:#7f8c8d;--border:#dce1e8;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;font-size:14px}
-button{cursor:pointer;font:inherit;border-radius:6px;border:1px solid var(--border);background:#fff;padding:.5rem 1rem;transition:all .15s}
-button:hover{background:#f0f3f7}
-button.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
-button.primary:hover{background:var(--primary-dark)}
-button.danger{background:var(--danger);color:#fff;border-color:var(--danger)}
-button.danger:hover{background:#a93226}
-button.sm{padding:.3rem .6rem;font-size:.8rem}
-input,select,textarea{padding:.5rem .7rem;border:1px solid var(--border);border-radius:6px;font:inherit;width:100%;background:#fff}
-input:focus,select:focus,textarea:focus{outline:2px solid var(--primary);outline-offset:-1px}
-label{display:block;margin-bottom:.8rem}
-label>span{display:block;font-weight:500;margin-bottom:.3rem;font-size:.85rem;color:#555}
-.hidden{display:none!important}
-.error{color:var(--danger);margin-top:.5rem;font-size:.85rem}
-.hint{color:var(--muted);font-size:.8rem;margin-top:.5rem}
-
-/* Auth */
-#login-view{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e3a5f,#2c3e50);padding:1rem}
-.auth-card{background:#fff;padding:2rem;border-radius:12px;width:100%;max-width:380px;box-shadow:0 10px 40px rgba(0,0,0,.2)}
-.auth-card h1{text-align:center;margin-bottom:1.5rem;color:var(--primary);font-size:1.4rem}
-.auth-tabs{display:flex;gap:.5rem;margin-bottom:1.2rem;border-bottom:1px solid var(--border)}
-.auth-tab{flex:1;background:none;border:none;border-radius:0;padding:.6rem;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
-.auth-tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:600}
-.auth-card form{display:flex;flex-direction:column;gap:.8rem}
-
-/* Layout */
-#main-view{min-height:100vh;display:flex;flex-direction:column}
-header{background:var(--primary);color:#fff;padding:.8rem 1.5rem;display:flex;justify-content:space-between;align-items:center}
-header h1{font-size:1.1rem}
-header .user-info{display:flex;align-items:center;gap:1rem;font-size:.85rem}
-header button{background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3);padding:.4rem .8rem}
-header button:hover{background:rgba(255,255,255,.25)}
-
-nav#main-nav{background:#fff;border-bottom:1px solid var(--border);padding:0 1.5rem;display:flex;gap:.2rem;overflow-x:auto}
-nav#main-nav button{background:none;border:none;border-radius:0;padding:.9rem 1rem;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
-nav#main-nav button.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:600;background:none}
-
-main#page-content{flex:1;padding:1.5rem;max-width:1400px;width:100%;margin:0 auto}
-.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem}
-.page-header h2{font-size:1.3rem;color:var(--primary)}
-.page-actions{display:flex;gap:.5rem;flex-wrap:wrap}
-
-.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:1rem}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem}
-.stat-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:1rem;border-left:4px solid var(--primary)}
-.stat-card .label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-.stat-card .value{font-size:1.6rem;font-weight:700;color:var(--primary);margin-top:.3rem}
-.stat-card .sub{font-size:.8rem;color:var(--muted);margin-top:.2rem}
-
-table{width:100%;border-collapse:collapse}
-th,td{text-align:left;padding:.6rem .7rem;border-bottom:1px solid var(--border);font-size:.9rem}
-th{background:#eef2f7;font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.3px;color:#555}
-tr:hover td{background:#fafbfc}
-.table-wrap{overflow-x:auto}
-
-.empty{text-align:center;padding:2rem;color:var(--muted)}
-.badge{display:inline-block;padding:.15rem .55rem;border-radius:12px;font-size:.72rem;font-weight:600}
-.badge.unpaid{background:#fdecea;color:var(--danger)}
-.badge.paid{background:#e8f6ee;color:var(--success)}
-.badge.partial{background:#fef5e7;color:var(--warn)}
-.badge.active{background:#e8f6ee;color:var(--success)}
-.badge.inactive{background:#eee;color:#777}
-
-/* Modal */
-.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:1rem}
-.modal{background:#fff;border-radius:12px;max-width:560px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
-.modal-header{padding:1rem 1.2rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff}
-.modal-header h3{font-size:1.1rem;color:var(--primary)}
-.modal-close{background:none;border:none;font-size:1.5rem;padding:0 .3rem;line-height:1;color:var(--muted)}
-.modal-body{padding:1.2rem}
-.modal-footer{padding:1rem 1.2rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.5rem;position:sticky;bottom:0;background:#fff}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
-@media(max-width:520px){.form-row{grid-template-columns:1fr}}
-
-/* Toast */
-.toast{position:fixed;top:1rem;right:1rem;padding:.8rem 1.2rem;border-radius:8px;color:#fff;z-index:2000;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:slideIn .2s}
-.toast-success{background:var(--success)}
-.toast-error{background:var(--danger)}
-@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
-
-.week-nav{display:flex;align-items:center;gap:.8rem;margin-bottom:1rem}
-.week-nav .label{font-weight:600;color:var(--primary)}
-
-@media(max-width:640px){
-  main#page-content{padding:1rem}
-  header{padding:.6rem 1rem}
-  header h1{font-size:.95rem}
-}
-</style>
-</head>
-<body>
-
-<!-- Login -->
-<div id="login-view">
-  <div class="auth-card">
-    <h1>🛡️ Security Manager</h1>
-    <div class="auth-tabs">
-      <button class="auth-tab active" data-auth="login">Sign in</button>
-      <button class="auth-tab" data-auth="signup">Create account</button>
-    </div>
-    <form id="auth-form">
-      <label><span>Email</span><input type="email" id="auth-email" required autocomplete="email"></label>
-      <label><span>Password</span><input type="password" id="auth-password" required minlength="6" autocomplete="current-password"></label>
-      <button type="submit" class="primary" id="auth-submit">Sign in</button>
-    </form>
-    <p id="auth-error" class="error"></p>
-    <p class="hint" id="auth-hint">First time? Click "Create account" to register.</p>
-  </div>
-</div>
-
-<!-- Main app -->
-<div id="main-view" class="hidden">
-  <header>
-    <h1>🛡️ Security Manager</h1>
-    <div class="user-info">
-      <span id="user-email"></span>
-      <button id="btn-logout">Log out</button>
-    </div>
-  </header>
-  <nav id="main-nav">
-    <button data-page="dashboard" class="active">Dashboard</button>
-    <button data-page="sites">Sites</button>
-    <button data-page="officers">Officers</button>
-    <button data-page="rota">Weekly Rota</button>
-    <button data-page="payroll">Payroll</button>
-    <button data-page="invoices">Invoices</button>
-    <button data-page="reports">Reports</button>
-  </nav>
-  <main id="page-content"></main>
-</div>
-
-<div id="modal-root"></div>
-
+:root{--bg:#f3f5f9;--card:#fff;--tx:#1b2433;--mu:#6b778c;--pr:#0f3460;--ac:#e94560;--ok:#1a8f4c;--bd:#dde3ee}
+@media(prefers-color-scheme:dark){:root{--bg:#10151f;--card:#18202e;--tx:#e8edf5;--mu:#93a0b8;--pr:#4a8ae0;--bd:#2a3548}}
+*{box-sizing:border-box}body{margin:0;font:14px/1.45 system-ui,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--tx)}
+#login{max-width:340px;margin:12vh auto;background:var(--card);padding:28px;border-radius:12px;border:1px solid var(--bd)}
+#app{display:none;min-height:100vh}nav{position:fixed;inset:0 auto 0 0;width:200px;background:#0f3460;color:#fff;padding:16px 10px;overflow:auto}
+nav h2{margin:0 8px 16px;font-size:18px}nav a{display:block;padding:9px 12px;border-radius:8px;color:#cfd9ee;cursor:pointer}nav a.on,nav a:hover{background:#ffffff22;color:#fff}
+main{margin-left:200px;padding:20px}h1{margin:0 0 14px;font-size:22px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:14px}
+.stat b{display:block;font-size:22px;color:var(--pr)}.stat span{color:var(--mu)}
+.w{overflow-x:auto}table{width:100%;border-collapse:collapse}th,td{padding:7px 9px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:top;white-space:nowrap}th{color:var(--mu);font-size:12px;text-transform:uppercase}
+input,select,textarea{width:100%;padding:8px;border:1px solid var(--bd);border-radius:7px;background:var(--bg);color:var(--tx);font:inherit}
+.btn{background:var(--pr);color:#fff;border:0;padding:8px 13px;border-radius:7px;cursor:pointer;font:inherit}.btn.ghost{background:none;color:var(--pr);border:1px solid var(--pr)}.btn.red{background:var(--ac)}.btn.sm{padding:4px 8px;font-size:12px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}.bar input,.bar select{width:auto}
+.chip{display:block;background:#0f346022;border-left:3px solid var(--pr);padding:3px 6px;margin:2px 0;border-radius:4px;cursor:pointer;font-size:12px}.chip.n{background:#e9456022;border-color:var(--ac)}
+.tag{padding:2px 8px;border-radius:10px;font-size:12px;background:var(--bd)}.tag.ok{background:#1a8f4c30;color:var(--ok)}.tag.bad{background:#e9456030;color:var(--ac)}
+dialog{border:0;border-radius:12px;padding:20px;width:min(520px,94vw);background:var(--card);color:var(--tx)}dialog::backdrop{background:#0008}
+label{display:block;margin:8px 0 2px;color:var(--mu);font-size:12px}.chk label{display:inline-block;margin-right:10px;color:var(--tx);font-size:13px}.chk input{width:auto}
+#toast{position:fixed;bottom:16px;right:16px;background:#222;color:#fff;padding:10px 14px;border-radius:8px;display:none;z-index:99;max-width:80vw}
+@media(max-width:760px){nav{position:static;width:auto;display:flex;overflow:auto;padding:8px}nav h2{display:none}nav a{white-space:nowrap}main{margin:0;padding:12px}}
+</style></head><body>
+<div id="login"><h2>🛡️ GuardOps</h2><p style="color:var(--mu)">Sign in to manage sites, rotas, payroll and invoices.</p>
+<form id="lf"><label>Email</label><input type="email" id="em" required><label>Password</label><input type="password" id="pw" required><br><br>
+<button class="btn" style="width:100%">Sign in</button></form><p><a href="#" onclick="forgot()">Forgot password?</a></p><p id="lerr" style="color:var(--ac)"></p></div>
+<div id="app"><nav id="nav"></nav><main id="main"></main></div>
+<dialog id="dlg"></dialog><div id="toast"></div>
 <script>
-/* =========================================================
-   FIREBASE INIT
-   ========================================================= */
-const firebaseConfig = {
-  apiKey: "AIzaSyDJN1soJO5fRTBqqMdC7LWVIFZ8AB8F1FY",
-  authDomain: "security-27dc5.firebaseapp.com",
-  projectId: "security-27dc5",
-  storageBucket: "security-27dc5.firebasestorage.app",
-  messagingSenderId: "955382240975",
-  appId: "1:955382240975:web:4e6c98666d2d88c1d2c9ba",
-  measurementId: "G-0XTERCLLTC"
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-const { jsPDF } = window.jspdf;
-
-/* =========================================================
-   STATE
-   ========================================================= */
-const state = {
-  user: null,
-  currentPage: 'dashboard',
-  sites: [],
-  officers: [],
-  weekStart: getMonday(new Date()),
-  authMode: 'login'
-};
-
-/* =========================================================
-   UTILITIES
-   ========================================================= */
-function getMonday(d){
-  const date = new Date(d); date.setHours(0,0,0,0);
-  const day = date.getDay() || 7;
-  date.setDate(date.getDate() - day + 1);
-  return date;
-}
-function addDays(d, n){ const r = new Date(d); r.setDate(r.getDate()+n); return r; }
-function fmtISO(d){ return d.toISOString().slice(0,10); }
-function fmtDisplay(d){
-  return d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
-}
-function fmtShort(d){ return d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'}); }
-function fmtMoney(n){ return '£' + (Number(n)||0).toFixed(2); }
-function timeToMinutes(t){ const [h,m] = t.split(':').map(Number); return h*60+m; }
-
-function toast(msg, type='success'){
-  const el = document.createElement('div');
-  el.className = 'toast toast-' + type;
-  el.textContent = msg;
-  document.body.appendChild(el);
-  setTimeout(()=>el.remove(), 3000);
-}
-
-/* =========================================================
-   ROTA MATH
-   ========================================================= */
-function calculateShiftHours(startTime, endTime, breakMinutes=0){
-  let s = timeToMinutes(startTime), e = timeToMinutes(endTime);
-  if(e <= s) e += 1440;
-  const mins = Math.max(e - s - breakMinutes, 0);
-  return Math.round((mins/60)*100)/100;
-}
-
-function hasOverlap(existingShifts, newShift){
-  const ns = new Date(`${newShift.date}T${newShift.startTime}:00`).getTime();
-  let ne = new Date(`${newShift.date}T${newShift.endTime}:00`).getTime();
-  if(ne <= ns) ne += 86400000;
-  return existingShifts.some(s => {
-    const ss = new Date(`${s.date}T${s.startTime}:00`).getTime();
-    let se = new Date(`${s.date}T${s.endTime}:00`).getTime();
-    if(se <= ss) se += 86400000;
-    return ns < se && ne > ss;
-  });
-}
-
-function aggregateHoursByOfficer(rotas){
-  const map = {};
-  rotas.forEach(r => {
-    const hrs = calculateShiftHours(r.startTime, r.endTime, r.breakMinutes||0);
-    if(!map[r.officerId]) map[r.officerId] = { totalHours:0, shifts:[] };
-    map[r.officerId].totalHours += hrs;
-    map[r.officerId].shifts.push({ ...r, hours:hrs });
-  });
-  Object.values(map).forEach(v => v.totalHours = Math.round(v.totalHours*100)/100);
-  return map;
-}
-
-function aggregateHoursBySite(rotas){
-  const map = {};
-  rotas.forEach(r => {
-    const hrs = calculateShiftHours(r.startTime, r.endTime, r.breakMinutes||0);
-    if(!map[r.siteId]) map[r.siteId] = 0;
-    map[r.siteId] += hrs;
-  });
-  Object.keys(map).forEach(k => map[k] = Math.round(map[k]*100)/100);
-  return map;
-}
-
-/* =========================================================
-   PAYROLL
-   ========================================================= */
-const BANK_HOLIDAYS = [
-  "2025-01-01","2025-04-18","2025-04-21","2025-05-05","2025-05-26",
-  "2025-08-25","2025-12-25","2025-12-26",
-  "2026-01-01","2026-04-03","2026-04-06","2026-05-04","2026-05-25",
-  "2026-08-31","2026-12-25","2026-12-28"
-];
-function isWeekend(dateStr){ const d = new Date(dateStr+'T12:00:00').getDay(); return d===0||d===6; }
-function isBankHoliday(dateStr){ return BANK_HOLIDAYS.includes(dateStr); }
-function isNightShift(s){
-  const start = timeToMinutes(s.startTime), end = timeToMinutes(s.endTime);
-  return start >= 22*60 || end <= 6*60;
-}
-function getWeekKey(dateStr){
-  const d = new Date(dateStr+'T12:00:00');
-  const day = d.getDay()||7;
-  const monday = new Date(d); monday.setDate(d.getDate()-day+1);
-  const year = monday.getFullYear();
-  const jan1 = new Date(year,0,1);
-  const week = Math.ceil(((monday-jan1)/86400000 + jan1.getDay()+1)/7);
-  return `${year}-W${String(week).padStart(2,'0')}`;
-}
-
-function calculateShiftPay(shift, officer, weeklyHoursSoFar=0){
-  const hours = calculateShiftHours(shift.startTime, shift.endTime, shift.breakMinutes||0);
-  const base = officer.hourlyRate || 0;
-  let rate = base;
-  if(isBankHoliday(shift.date))       rate = officer.bankHolidayRate || base*2;
-  else if(isWeekend(shift.date))      rate = officer.weekendRate    || base*1.5;
-  else if(isNightShift(shift))        rate = officer.nightRate      || base*1.25;
-
-  const OT_THRESHOLD = 40;
-  const otHours = Math.max(0, weeklyHoursSoFar + hours - OT_THRESHOLD);
-  const normalHours = hours - otHours;
-  const otRate = officer.overtimeRate || base*1.5;
-  return normalHours*rate + otHours*otRate;
-}
-
-async function calculateMonthlySalary(officerId, month){
-  const start = `${month}-01`, end = `${month}-31`;
-  const [officer, rotas] = await Promise.all([
-    db.collection('officers').doc(officerId).get().then(d=>({id:d.id,...d.data()})),
-    getRotasForRange(start, end)
-  ]);
-  const myRotas = rotas.filter(r => r.officerId === officerId);
-  myRotas.sort((a,b)=>a.date.localeCompare(b.date));
-
-  let totalHours = 0, grossPay = 0;
-  const breakdown = [];
-  const weeks = {};
-  myRotas.forEach(r => {
-    const wk = getWeekKey(r.date);
-    (weeks[wk] = weeks[wk]||[]).push(r);
-  });
-  for(const weekShifts of Object.values(weeks)){
-    let wh = 0;
-    weekShifts.forEach(s => {
-      const hrs = calculateShiftHours(s.startTime, s.endTime, s.breakMinutes||0);
-      const pay = calculateShiftPay(s, officer, wh);
-      wh += hrs; totalHours += hrs; grossPay += pay;
-      breakdown.push({ ...s, hours:hrs, pay:Math.round(pay*100)/100 });
-    });
-  }
-  totalHours = Math.round(totalHours*100)/100;
-  grossPay   = Math.round(grossPay*100)/100;
-  return { officerId, officerName:officer.name, month, totalHours, grossPay, breakdown };
-}
-
-/* =========================================================
-   FIRESTORE ACCESS
-   ========================================================= */
-async function getSites(){
-  const snap = await db.collection('sites').get();
-  return snap.docs.map(d => ({id:d.id,...d.data()})).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-}
-async function addSite(data){ return db.collection('sites').add({...data, createdAt:firebase.firestore.FieldValue.serverTimestamp()}); }
-async function updateSite(id, data){ return db.collection('sites').doc(id).update(data); }
-async function deleteSite(id){ return db.collection('sites').doc(id).delete(); }
-
-async function getOfficers(){
-  const snap = await db.collection('officers').get();
-  return snap.docs.map(d => ({id:d.id,...d.data()})).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-}
-async function addOfficer(data){ return db.collection('officers').add({...data, createdAt:firebase.firestore.FieldValue.serverTimestamp()}); }
-async function updateOfficer(id, data){ return db.collection('officers').doc(id).update(data); }
-async function deleteOfficer(id){ return db.collection('officers').doc(id).delete(); }
-
-async function getRotasForRange(start, end){
-  const snap = await db.collection('rotas')
-    .where('date','>=',start).where('date','<=',end).get();
-  return snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
-}
-async function addRota(data){ return db.collection('rotas').add({...data, createdAt:firebase.firestore.FieldValue.serverTimestamp()}); }
-async function updateRota(id, data){ return db.collection('rotas').doc(id).update(data); }
-async function deleteRota(id){ return db.collection('rotas').doc(id).delete(); }
-
-async function savePayroll(rec){ return db.collection('payroll').add({...rec, createdAt:firebase.firestore.FieldValue.serverTimestamp()}); }
-async function getPayrollForMonth(m){
-  const snap = await db.collection('payroll').where('month','==',m).get();
-  return snap.docs.map(d=>({id:d.id,...d.data()}));
-}
-
-async function getInvoices(){
-  const snap = await db.collection('invoices').get();
-  return snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.invoiceNumber||'').localeCompare(a.invoiceNumber||''));
-}
-async function saveInvoice(inv){ return db.collection('invoices').add({...inv, createdAt:firebase.firestore.FieldValue.serverTimestamp()}); }
-async function updateInvoice(id, data){ return db.collection('invoices').doc(id).update(data); }
-async function deleteInvoice(id){ return db.collection('invoices').doc(id).delete(); }
-
-async function refreshSites(){ state.sites = await getSites(); }
-async function refreshOfficers(){ state.officers = await getOfficers(); }
-
-/* =========================================================
-   MODAL HELPERS
-   ========================================================= */
-function showModal(title, bodyHTML, onSubmit, opts={}){
-  const root = document.getElementById('modal-root');
-  root.innerHTML = `
-    <div class="modal-backdrop">
-      <div class="modal">
-        <div class="modal-header">
-          <h3>${title}</h3>
-          <button class="modal-close" type="button">×</button>
-        </div>
-        <form id="modal-form">
-          <div class="modal-body">${bodyHTML}</div>
-          <div class="modal-footer">
-            <button type="button" class="modal-cancel">Cancel</button>
-            <button type="submit" class="primary">${opts.submitLabel||'Save'}</button>
-          </div>
-        </form>
-      </div>
-    </div>`;
-  const close = () => { root.innerHTML = ''; };
-  root.querySelector('.modal-close').onclick = close;
-  root.querySelector('.modal-cancel').onclick = close;
-  root.querySelector('.modal-backdrop').onclick = (e) => { if(e.target === e.currentTarget) close(); };
-  root.querySelector('#modal-form').onsubmit = async (e) => {
-    e.preventDefault();
-    const btn = e.target.querySelector('button[type="submit"]');
-    btn.disabled = true; btn.textContent = 'Saving…';
-    try {
-      await onSubmit(new FormData(e.target));
-      close();
-    } catch(err){
-      alert('Error: ' + err.message);
-      btn.disabled = false; btn.textContent = opts.submitLabel || 'Save';
-    }
-  };
-  if(opts.onOpen) opts.onOpen(root);
-}
-
-function confirmAction(msg, onConfirm){
-  if(confirm(msg)) onConfirm();
-}
-
-/* =========================================================
-   PDF GENERATORS
-   ========================================================= */
-function pdfHeader(doc, title, subtitle){
-  doc.setFont('helvetica','bold').setFontSize(20);
-  doc.text(title, 14, 20);
-  doc.setFont('helvetica','normal').setFontSize(10).setTextColor(100);
-  doc.text('Security Company Ltd  •  VAT GB 123 4567 89', 14, 26);
-  doc.setTextColor(0);
-  if(subtitle){ doc.setFontSize(11).setFont('helvetica','bold'); doc.text(subtitle, 14, 36); }
-  doc.setDrawColor(30,58,95).setLineWidth(0.5);
-  doc.line(14, subtitle?40:30, 196, subtitle?40:30);
-}
-
-function generateSiteRotaPDF(siteName, shifts, weekLabel, officerMap, siteMap){
-  const doc = new jsPDF({unit:'mm',format:'a4'});
-  pdfHeader(doc, 'Weekly Site Rota', `${siteName}  •  ${weekLabel}`);
-  let y = 50;
-  doc.setFont('helvetica','bold').setFontSize(9).setFillColor(230,235,245);
-  doc.rect(14, y-5, 182, 7, 'F');
-  const cols = [14, 40, 75, 105, 125, 145, 168];
-  ['Date','Site','Officer','Start','End','Break','Hours'].forEach((c,i)=>doc.text(c, cols[i], y));
-  y += 6;
-  doc.setFont('helvetica','normal').setFillColor(255);
-  let total = 0;
-  shifts.forEach((s,i)=>{
-    const hrs = calculateShiftHours(s.startTime, s.endTime, s.breakMinutes||0);
-    total += hrs;
-    if(y > 275){ doc.addPage(); y = 20; }
-    if(i%2===0){ doc.setFillColor(250,251,252); doc.rect(14,y-4,182,6,'F'); }
-    doc.text(s.date, cols[0], y);
-    doc.text((siteMap[s.siteId]?.name||'—').substring(0,20), cols[1], y);
-    doc.text((officerMap[s.officerId]?.name||'—').substring(0,20), cols[2], y);
-    doc.text(s.startTime, cols[3], y);
-    doc.text(s.endTime, cols[4], y);
-    doc.text(String(s.breakMinutes||0)+'m', cols[5], y);
-    doc.text(hrs.toFixed(2), cols[6], y);
-    y += 6;
-  });
-  y += 3;
-  doc.setFont('helvetica','bold').setFontSize(11);
-  doc.text(`Total shifts: ${shifts.length}`, 14, y);
-  doc.text(`Total hours: ${total.toFixed(2)}`, 196, y, {align:'right'});
-  doc.setFont('helvetica','italic').setFontSize(8).setTextColor(120);
-  doc.text('Generated on ' + new Date().toLocaleString('en-GB'), 14, 288);
-  doc.save(`rota-${siteName.replace(/\s+/g,'-')}-${weekLabel.replace(/[^\w]/g,'-')}.pdf`);
-}
-
-function generateTimesheetPDF(result, siteMap){
-  const doc = new jsPDF({unit:'mm',format:'a4'});
-  pdfHeader(doc, 'Monthly Timesheet', `${result.officerName}  •  ${result.month}`);
-  let y = 50;
-  doc.setFont('helvetica','bold').setFontSize(9).setFillColor(230,235,245);
-  doc.rect(14, y-5, 182, 7, 'F');
-  const cols = [14, 40, 85, 105, 125, 140, 165];
-  ['Date','Site','Start','End','Break','Hours','Pay'].forEach((c,i)=>doc.text(c,cols[i],y));
-  y += 6;
-  doc.setFont('helvetica','normal').setFillColor(255);
-  result.breakdown.forEach((s,i)=>{
-    if(y > 275){ doc.addPage(); y = 20; }
-    if(i%2===0){ doc.setFillColor(250,251,252); doc.rect(14,y-4,182,6,'F'); }
-    doc.text(s.date, cols[0], y);
-    doc.text((siteMap[s.siteId]?.name||'—').substring(0,22), cols[1], y);
-    doc.text(s.startTime, cols[2], y);
-    doc.text(s.endTime, cols[3], y);
-    doc.text(String(s.breakMinutes||0)+'m', cols[4], y);
-    doc.text(s.hours.toFixed(2), cols[5], y);
-    doc.text(fmtMoney(s.pay), cols[6], y);
-    y += 6;
-  });
-  y += 6;
-  doc.setDrawColor(30,58,95);
-  doc.line(14, y, 196, y); y += 6;
-  doc.setFont('helvetica','bold').setFontSize(11);
-  doc.text(`Total hours: ${result.totalHours}`, 14, y);
-  doc.text(`Gross pay: ${fmtMoney(result.grossPay)}`, 196, y, {align:'right'});
-  doc.setFont('helvetica','italic').setFontSize(8).setTextColor(120);
-  doc.text('Generated on ' + new Date().toLocaleString('en-GB'), 14, 288);
-  doc.save(`timesheet-${result.officerName.replace(/\s+/g,'-')}-${result.month}.pdf`);
-}
-
-function generatePayslipPDF(result){
-  const doc = new jsPDF({unit:'mm',format:'a4'});
-  pdfHeader(doc, 'PAYSLIP', null);
-  let y = 55;
-  doc.setFontSize(11).setFont('helvetica','bold');
-  doc.text('Employee', 14, y);   doc.text(result.officerName, 80, y);
-  doc.text('Pay period', 14, y+7); doc.text(result.month, 80, y+7);
-  doc.text('Pay date', 14, y+14); doc.text(new Date().toLocaleDateString('en-GB'), 80, y+14);
-  y += 28;
-  doc.setFillColor(240,244,250); doc.rect(14, y-5, 182, 7, 'F');
-  doc.text('Description', 14, y); doc.text('Amount', 160, y);
-  y += 8; doc.setFont('helvetica','normal');
-  doc.text(`Basic pay (${result.totalHours} hrs)`, 14, y); doc.text(fmtMoney(result.grossPay), 160, y);
-  y += 8;
-  const tax = result.grossPay * 0.20;
-  const ni  = result.grossPay * 0.08;
-  doc.text('PAYE tax (est. 20%)', 14, y); doc.text('-' + fmtMoney(tax), 160, y); y += 7;
-  doc.text('National Insurance (est. 8%)', 14, y); doc.text('-' + fmtMoney(ni), 160, y); y += 10;
-  doc.setDrawColor(30,58,95); doc.line(14,y,196,y); y += 8;
-  doc.setFont('helvetica','bold').setFontSize(13);
-  doc.text('NET PAY', 14, y);
-  doc.text(fmtMoney(result.grossPay - tax - ni), 196, y, {align:'right'});
-  doc.setFont('helvetica','italic').setFontSize(8).setTextColor(120);
-  doc.text('This is a computer-generated payslip. Tax and NI are estimates.', 14, 280);
-  doc.text('Generated on ' + new Date().toLocaleString('en-GB'), 14, 286);
-  doc.save(`payslip-${result.officerName.replace(/\s+/g,'-')}-${result.month}.pdf`);
-}
-
-function generateInvoicePDF(inv){
-  const doc = new jsPDF({unit:'mm',format:'a4'});
-  doc.setFont('helvetica','bold').setFontSize(26).setTextColor(30,58,95);
-  doc.text('INVOICE', 196, 22, {align:'right'});
-  doc.setFontSize(11).setTextColor(0);
-  doc.setFont('helvetica','normal');
-  doc.text('Security Company Ltd', 14, 20);
-  doc.setFontSize(9).setTextColor(100);
-  doc.text('123 Business Street, London, UK', 14, 25);
-  doc.text('VAT No: GB 123 4567 89', 14, 30);
-  doc.setTextColor(0);
-
-  let y = 50;
-  doc.setFont('helvetica','bold').setFontSize(10);
-  doc.text('Invoice #:', 14, y);   doc.setFont('helvetica','normal'); doc.text(inv.invoiceNumber, 45, y);
-  doc.setFont('helvetica','bold'); doc.text('Date:', 140, y); doc.setFont('helvetica','normal'); doc.text(new Date().toLocaleDateString('en-GB'), 165, y);
-  y += 7; doc.setFont('helvetica','bold'); doc.text('Bill to:', 14, y);
-  doc.setFont('helvetica','normal'); doc.text(inv.clientName, 45, y);
-  y += 7; doc.setFont('helvetica','bold'); doc.text('Period:', 14, y);
-  doc.setFont('helvetica','normal'); doc.text(inv.period, 45, y);
-  y += 14;
-
-  doc.setFillColor(30,58,95).setTextColor(255);
-  doc.rect(14, y-5, 182, 8, 'F');
-  doc.setFont('helvetica','bold').setFontSize(9);
-  ['Description','Hours','Rate','Amount'].forEach((c,i)=>doc.text(c,[18,110,130,165][i],y));
-  doc.setTextColor(0);
-  y += 8;
-  doc.setFont('helvetica','normal').setFontSize(9);
-  inv.lineItems.forEach((item,i)=>{
-    if(y>270){ doc.addPage(); y=20; }
-    if(i%2===0){ doc.setFillColor(250,251,252); doc.rect(14,y-4,182,6,'F'); }
-    doc.text((item.description||'').substring(0,45), 18, y);
-    doc.text(String(item.hours), 110, y);
-    doc.text(fmtMoney(item.rate), 130, y);
-    doc.text(fmtMoney(item.amount), 165, y);
-    y += 6;
-  });
-
-  y += 6; doc.setDrawColor(200); doc.line(110,y,196,y); y += 6;
-  doc.setFont('helvetica','normal').setFontSize(10);
-  doc.text('Subtotal', 110, y); doc.text(fmtMoney(inv.subtotal), 196, y, {align:'right'});
-  y += 6;
-  doc.text(`VAT (${inv.vatRate}%)`, 110, y); doc.text(fmtMoney(inv.vatAmount), 196, y, {align:'right'});
-  y += 8; doc.setDrawColor(30,58,95).setLineWidth(0.6);
-  doc.line(110,y,196,y); y += 7;
-  doc.setFont('helvetica','bold').setFontSize(12);
-  doc.text('TOTAL', 110, y); doc.text(fmtMoney(inv.total), 196, y, {align:'right'});
-
-  doc.setFont('helvetica','italic').setFontSize(8).setTextColor(120);
-  doc.text('Payment due within 30 days.', 14, 275);
-  doc.text('Generated on ' + new Date().toLocaleString('en-GB'), 14, 282);
-  doc.save(`invoice-${inv.invoiceNumber}.pdf`);
-}
-
-/* =========================================================
-   AUTH
-   ========================================================= */
-document.querySelectorAll('.auth-tab').forEach(tab=>{
-  tab.onclick = () => {
-    state.authMode = tab.dataset.auth;
-    document.querySelectorAll('.auth-tab').forEach(t=>t.classList.toggle('active', t===tab));
-    document.getElementById('auth-submit').textContent =
-      state.authMode === 'signup' ? 'Create account' : 'Sign in';
-    document.getElementById('auth-error').textContent = '';
-  };
-});
-
-document.getElementById('auth-form').onsubmit = async (e) => {
-  e.preventDefault();
-  const email = document.getElementById('auth-email').value.trim();
-  const pw = document.getElementById('auth-password').value;
-  const errEl = document.getElementById('auth-error');
-  errEl.textContent = '';
-  const btn = document.getElementById('auth-submit');
-  btn.disabled = true; btn.textContent = 'Please wait…';
-  try {
-    if(state.authMode === 'signup'){
-      await auth.createUserWithEmailAndPassword(email, pw);
-      toast('Account created');
-    } else {
-      await auth.signInWithEmailAndPassword(email, pw);
-    }
-  } catch(err){
-    errEl.textContent = err.message;
-  } finally {
-    btn.disabled = false;
-    btn.textContent = state.authMode === 'signup' ? 'Create account' : 'Sign in';
-  }
-};
-
-document.getElementById('btn-logout').onclick = () => auth.signOut();
-
-auth.onAuthStateChanged(async user => {
-  state.user = user;
-  if(user){
-    document.getElementById('login-view').classList.add('hidden');
-    document.getElementById('main-view').classList.remove('hidden');
-    document.getElementById('user-email').textContent = user.email;
-    try {
-      await Promise.all([refreshSites(), refreshOfficers()]);
-      renderPage(state.currentPage);
-    } catch(err){
-      document.getElementById('page-content').innerHTML =
-        `<div class="card"><p class="error">Failed to load data. Have you enabled Firestore and set rules?<br>${err.message}</p></div>`;
-    }
-  } else {
-    document.getElementById('login-view').classList.remove('hidden');
-    document.getElementById('main-view').classList.add('hidden');
-    state.sites = []; state.officers = [];
-  }
-});
-
-/* =========================================================
-   NAVIGATION
-   ========================================================= */
-document.querySelectorAll('#main-nav button').forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll('#main-nav button').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    state.currentPage = btn.dataset.page;
-    renderPage(btn.dataset.page);
-  };
-});
-
-async function renderPage(page){
-  const c = document.getElementById('page-content');
-  c.innerHTML = '<p style="padding:2rem;text-align:center;color:#888">Loading…</p>';
-  try {
-    if(page==='dashboard') await renderDashboard(c);
-    else if(page==='sites') await renderSitesPage(c);
-    else if(page==='officers') await renderOfficersPage(c);
-    else if(page==='rota') await renderRotaPage(c);
-    else if(page==='payroll') await renderPayrollPage(c);
-    else if(page==='invoices') await renderInvoicesPage(c);
-    else if(page==='reports') await renderReportsPage(c);
-  } catch(err){
-    c.innerHTML = `<div class="card"><p class="error">${err.message}</p></div>`;
-  }
-}
-
-/* =========================================================
-   DASHBOARD
-   ========================================================= */
-async function renderDashboard(c){
-  const weekStart = state.weekStart;
-  const weekEnd = addDays(weekStart, 6);
-  const month = new Date().toISOString().slice(0,7);
-  const [rotas, invoices, payroll] = await Promise.all([
-    getRotasForRange(fmtISO(weekStart), fmtISO(weekEnd)),
-    getInvoices(),
-    getPayrollForMonth(month)
-  ]);
-  const weekHours = rotas.reduce((s,r)=>s+calculateShiftHours(r.startTime,r.endTime,r.breakMinutes||0),0);
-  const outstanding = invoices.filter(i=>i.status!=='paid').reduce((s,i)=>s+(i.total||0),0);
-  const payrollTotal = payroll.reduce((s,p)=>s+(p.grossPay||0),0);
-  const activeOfficers = state.officers.filter(o=>o.active!==false).length;
-
-  c.innerHTML = `
-    <div class="page-header"><h2>Dashboard</h2></div>
-    <div class="stats">
-      <div class="stat-card"><div class="label">Sites</div><div class="value">${state.sites.length}</div></div>
-      <div class="stat-card"><div class="label">Active Officers</div><div class="value">${activeOfficers}</div><div class="sub">${state.officers.length} total</div></div>
-      <div class="stat-card"><div class="label">This Week Hours</div><div class="value">${weekHours.toFixed(1)}</div><div class="sub">${rotas.length} shifts</div></div>
-      <div class="stat-card"><div class="label">Outstanding Invoices</div><div class="value" style="color:var(--danger)">${fmtMoney(outstanding)}</div></div>
-      <div class="stat-card"><div class="label">Payroll This Month</div><div class="value">${fmtMoney(payrollTotal)}</div><div class="sub">${payroll.length} records</div></div>
-    </div>
-    <div class="card">
-      <h3 style="margin-bottom:.7rem;color:var(--primary)">This Week's Shifts</h3>
-      ${rotas.length===0
-        ? '<div class="empty">No shifts scheduled this week.</div>'
-        : `<div class="table-wrap"><table><thead><tr><th>Date</th><th>Site</th><th>Officer</th><th>Shift</th><th>Hours</th></tr></thead><tbody>
-          ${rotas.slice(0,10).map(r=>{
-            const site = state.sites.find(s=>s.id===r.siteId);
-            const off = state.officers.find(o=>o.id===r.officerId);
-            return `<tr>
-              <td>${fmtShort(new Date(r.date+'T12:00:00'))}</td>
-              <td>${site?.name||'—'}</td>
-              <td>${off?.name||'—'}</td>
-              <td>${r.startTime} – ${r.endTime}</td>
-              <td>${calculateShiftHours(r.startTime,r.endTime,r.breakMinutes||0).toFixed(2)}</td>
-            </tr>`;
-          }).join('')}
-        </tbody></table></div>`}
-    </div>
-  `;
-}
-
-/* =========================================================
-   SITES PAGE
-   ========================================================= */
-async function renderSitesPage(c){
-  await refreshSites();
-  c.innerHTML = `
-    <div class="page-header">
-      <h2>Sites</h2>
-      <div class="page-actions"><button class="primary" id="btn-add-site">+ Add site</button></div>
-    </div>
-    <div class="card">
-      ${state.sites.length===0 ? '<div class="empty">No sites yet. Click "Add site" to create one.</div>' :
-        `<div class="table-wrap"><table><thead><tr>
-          <th>Name</th><th>Client</th><th>Address</th><th>Contact</th><th>Rate (£/hr)</th><th></th>
-        </tr></thead><tbody>
-          ${state.sites.map(s=>`<tr>
-            <td><strong>${s.name||''}</strong></td>
-            <td>${s.clientName||'—'}</td>
-            <td>${s.address||'—'}</td>
-            <td>${s.contact||'—'}</td>
-            <td>${s.billingRate?fmtMoney(s.billingRate):'—'}</td>
-            <td>
-              <button class="sm" data-edit-site="${s.id}">Edit</button>
-              <button class="sm danger" data-del-site="${s.id}">Delete</button>
-            </td>
-          </tr>`).join('')}
-        </tbody></table></div>`}
-    </div>`;
-
-  document.getElementById('btn-add-site').onclick = () => siteForm(null);
-  c.querySelectorAll('[data-edit-site]').forEach(b => b.onclick = () => {
-    siteForm(state.sites.find(s=>s.id===b.dataset.editSite));
-  });
-  c.querySelectorAll('[data-del-site]').forEach(b => b.onclick = () => {
-    confirmAction('Delete this site?', async ()=>{
-      await deleteSite(b.dataset.delSite); toast('Site deleted'); renderSitesPage(c);
-    });
-  });
-}
-
-function siteForm(site){
-  showModal(site?'Edit Site':'New Site', `
-    <label><span>Site name *</span><input name="name" required value="${site?.name||''}"></label>
-    <label><span>Client name *</span><input name="clientName" required value="${site?.clientName||''}"></label>
-    <label><span>Address</span><input name="address" value="${site?.address||''}"></label>
-    <label><span>Contact</span><input name="contact" value="${site?.contact||''}"></label>
-    <label><span>Billing rate (£/hour) *</span><input name="billingRate" type="number" step="0.01" required value="${site?.billingRate||''}"></label>
-  `, async (fd) => {
-    const data = {
-      name: fd.get('name').trim(),
-      clientName: fd.get('clientName').trim(),
-      address: fd.get('address').trim(),
-      contact: fd.get('contact').trim(),
-      billingRate: parseFloat(fd.get('billingRate'))
-    };
-    if(site) await updateSite(site.id, data);
-    else await addSite(data);
-    toast(site?'Site updated':'Site added');
-    await refreshSites();
-    renderPage(state.currentPage);
-  });
-}
-
-/* =========================================================
-   OFFICERS PAGE
-   ========================================================= */
-async function renderOfficersPage(c){
-  await refreshOfficers();
-  c.innerHTML = `
-    <div class="page-header">
-      <h2>Officers</h2>
-      <div class="page-actions"><button class="primary" id="btn-add-off">+ Register officer</button></div>
-    </div>
-    <div class="card">
-      ${state.officers.length===0 ? '<div class="empty">No officers yet.</div>' :
-        `<div class="table-wrap"><table><thead><tr>
-          <th>Name</th><th>SIA Licence</th><th>Email</th><th>Phone</th><th>Rate</th><th>Status</th><th></th>
-        </tr></thead><tbody>
-          ${state.officers.map(o=>`<tr>
-            <td><strong>${o.name||''}</strong></td>
-            <td>${o.siaLicence||'—'}</td>
-            <td>${o.email||'—'}</td>
-            <td>${o.phone||'—'}</td>
-            <td>${o.hourlyRate?fmtMoney(o.hourlyRate):'—'}</td>
-            <td><span class="badge ${o.active!==false?'active':'inactive'}">${o.active!==false?'Active':'Inactive'}</span></td>
-            <td>
-              <button class="sm" data-edit-off="${o.id}">Edit</button>
-              <button class="sm danger" data-del-off="${o.id}">Delete</button>
-            </td>
-          </tr>`).join('')}
-        </tbody></table></div>`}
-    </div>`;
-
-  document.getElementById('btn-add-off').onclick = () => officerForm(null);
-  c.querySelectorAll('[data-edit-off]').forEach(b => b.onclick = () => {
-    officerForm(state.officers.find(o=>o.id===b.dataset.editOff));
-  });
-  c.querySelectorAll('[data-del-off]').forEach(b => b.onclick = () => {
-    confirmAction('Delete this officer?', async ()=>{
-      await deleteOfficer(b.dataset.delOff); toast('Officer deleted'); renderOfficersPage(c);
-    });
-  });
-}
-
-function officerForm(off){
-  showModal(off?'Edit Officer':'New Officer', `
-    <label><span>Full name *</span><input name="name" required value="${off?.name||''}"></label>
-    <div class="form-row">
-      <label><span>Email</span><input name="email" type="email" value="${off?.email||''}"></label>
-      <label><span>Phone</span><input name="phone" value="${off?.phone||''}"></label>
-    </div>
-    <div class="form-row">
-      <label><span>SIA licence</span><input name="siaLicence" value="${off?.siaLicence||''}"></label>
-      <label><span>SIA expiry</span><input name="siaExpiry" type="date" value="${off?.siaExpiry||''}"></label>
-    </div>
-    <label><span>Base hourly rate (£) *</span><input name="hourlyRate" type="number" step="0.01" required value="${off?.hourlyRate||''}"></label>
-    <div class="form-row">
-      <label><span>Weekend rate</span><input name="weekendRate" type="number" step="0.01" value="${off?.weekendRate||''}"></label>
-      <label><span>Night rate</span><input name="nightRate" type="number" step="0.01" value="${off?.nightRate||''}"></label>
-    </div>
-    <div class="form-row">
-      <label><span>Overtime rate</span><input name="overtimeRate" type="number" step="0.01" value="${off?.overtimeRate||''}"></label>
-      <label><span>Bank holiday rate</span><input name="bankHolidayRate" type="number" step="0.01" value="${off?.bankHolidayRate||''}"></label>
-    </div>
-    <label><span>Status</span>
-      <select name="active">
-        <option value="true" ${off?.active!==false?'selected':''}>Active</option>
-        <option value="false" ${off?.active===false?'selected':''}>Inactive</option>
-      </select>
-    </label>
-  `, async (fd) => {
-    const num = (k) => { const v = parseFloat(fd.get(k)); return isNaN(v)?null:v; };
-    const data = {
-      name: fd.get('name').trim(),
-      email: fd.get('email').trim(),
-      phone: fd.get('phone').trim(),
-      siaLicence: fd.get('siaLicence').trim(),
-      siaExpiry: fd.get('siaExpiry'),
-      hourlyRate: num('hourlyRate'),
-      weekendRate: num('weekendRate'),
-      nightRate: num('nightRate'),
-      overtimeRate: num('overtimeRate'),
-      bankHolidayRate: num('bankHolidayRate'),
-      active: fd.get('active')==='true'
-    };
-    if(off) await updateOfficer(off.id, data);
-    else await addOfficer(data);
-    toast(off?'Officer updated':'Officer registered');
-    await refreshOfficers();
-    renderPage(state.currentPage);
-  });
-}
-
-/* =========================================================
-   ROTA PAGE
-   ========================================================= */
-async function renderRotaPage(c){
-  const ws = state.weekStart, we = addDays(ws, 6);
-  const [rotas] = await Promise.all([getRotasForRange(fmtISO(ws), fmtISO(we))]);
-  const officerMap = Object.fromEntries(state.officers.map(o=>[o.id,o]));
-  const siteMap = Object.fromEntries(state.sites.map(s=>[s.id,s]));
-
-  const totalHours = rotas.reduce((s,r)=>s+calculateShiftHours(r.startTime,r.endTime,r.breakMinutes||0),0);
-
-  c.innerHTML = `
-    <div class="page-header">
-      <h2>Weekly Rota</h2>
-      <div class="page-actions">
-        <button class="primary" id="btn-add-shift">+ Add shift</button>
-        <button id="btn-copy-week">Copy previous week</button>
-        <button id="btn-pdf-rota">Download PDF</button>
-      </div>
-    </div>
-    <div class="card">
-      <div class="week-nav">
-        <button id="prev-week">← Previous</button>
-        <span class="label">${fmtShort(ws)} → ${fmtShort(we)} ${ws.getFullYear()}</span>
-        <button id="next-week">Next →</button>
-        <button id="this-week">This week</button>
-        <span style="margin-left:auto;color:var(--muted);font-size:.85rem">
-          ${rotas.length} shifts • ${totalHours.toFixed(2)} hrs total
-        </span>
-      </div>
-      ${rotas.length===0 ? '<div class="empty">No shifts this week.</div>' :
-        `<div class="table-wrap"><table><thead><tr>
-          <th>Date</th><th>Day</th><th>Site</th><th>Officer</th>
-          <th>Start</th><th>End</th><th>Break</th><th>Hours</th><th></th>
-        </tr></thead><tbody>
-        ${rotas.map(r=>{
-          const hrs = calculateShiftHours(r.startTime,r.endTime,r.breakMinutes||0);
-          const dateObj = new Date(r.date+'T12:00:00');
-          return `<tr>
-            <td>${r.date}</td>
-            <td>${dateObj.toLocaleDateString('en-GB',{weekday:'short'})}</td>
-            <td>${siteMap[r.siteId]?.name||'—'}</td>
-            <td>${officerMap[r.officerId]?.name||'—'}</td>
-            <td>${r.startTime}</td>
-            <td>${r.endTime}</td>
-            <td>${r.breakMinutes||0}m</td>
-            <td><strong>${hrs.toFixed(2)}</strong></td>
-            <td>
-              <button class="sm" data-edit-shift="${r.id}">Edit</button>
-              <button class="sm danger" data-del-shift="${r.id}">Delete</button>
-            </td>
-          </tr>`;
-        }).join('')}
-        </tbody></table></div>`}
-    </div>`;
-
-  document.getElementById('prev-week').onclick = () => { state.weekStart = addDays(ws,-7); renderRotaPage(c); };
-  document.getElementById('next-week').onclick = () => { state.weekStart = addDays(ws,7); renderRotaPage(c); };
-  document.getElementById('this-week').onclick = () => { state.weekStart = getMonday(new Date()); renderRotaPage(c); };
-  document.getElementById('btn-add-shift').onclick = () => shiftForm(null, ws, c);
-
-  document.getElementById('btn-copy-week').onclick = async () => {
-    const prevStart = addDays(ws,-7), prevEnd = addDays(prevStart,6);
-    const prev = await getRotasForRange(fmtISO(prevStart), fmtISO(prevEnd));
-    if(prev.length===0) return toast('No shifts in previous week','error');
-    for(const r of prev){
-      const d = new Date(r.date+'T12:00:00');
-      d.setDate(d.getDate()+7);
-      await addRota({ siteId:r.siteId, officerId:r.officerId, date:fmtISO(d),
-        startTime:r.startTime, endTime:r.endTime, breakMinutes:r.breakMinutes||0, shiftType:r.shiftType||'day' });
-    }
-    toast(`Copied ${prev.length} shifts`); renderRotaPage(c);
-  };
-
-  document.getElementById('btn-pdf-rota').onclick = () => {
-    if(rotas.length===0) return toast('No shifts to export','error');
-    generateSiteRotaPDF('All Sites', rotas, `${fmtShort(ws)} – ${fmtShort(we)} ${we.getFullYear()}`, officerMap, siteMap);
-  };
-
-  c.querySelectorAll('[data-edit-shift]').forEach(b => b.onclick = () => {
-    shiftForm(rotas.find(r=>r.id===b.dataset.editShift), ws, c);
-  });
-  c.querySelectorAll('[data-del-shift]').forEach(b => b.onclick = () => {
-    confirmAction('Delete this shift?', async ()=>{
-      await deleteRota(b.dataset.delShift); toast('Shift deleted'); renderRotaPage(c);
-    });
-  });
-}
-
-function shiftForm(rota, ws, container){
-  if(state.sites.length===0 || state.officers.length===0){
-    return alert('Please add at least one site and one officer first.');
-  }
-  const siteOpts = state.sites.map(s=>`<option value="${s.id}" ${rota?.siteId===s.id?'selected':''}>${s.name}</option>`).join('');
-  const offOpts = state.officers.filter(o=>o.active!==false).map(o=>`<option value="${o.id}" ${rota?.officerId===o.id?'selected':''}>${o.name}</option>`).join('');
-
-  showModal(rota?'Edit Shift':'New Shift', `
-    <label><span>Date *</span><input name="date" type="date" required value="${rota?.date||fmtISO(ws)}"></label>
-    <div class="form-row">
-      <label><span>Site *</span><select name="siteId" required>${siteOpts}</select></label>
-      <label><span>Officer *</span><select name="officerId" required>${offOpts}</select></label>
-    </div>
-    <div class="form-row">
-      <label><span>Start time *</span><input name="startTime" type="time" required value="${rota?.startTime||'09:00'}"></label>
-      <label><span>End time *</span><input name="endTime" type="time" required value="${rota?.endTime||'17:00'}"></label>
-    </div>
-    <div class="form-row">
-      <label><span>Break (minutes)</span><input name="breakMinutes" type="number" min="0" value="${rota?.breakMinutes||0}"></label>
-      <label><span>Shift type</span>
-        <select name="shiftType">
-          <option value="day" ${rota?.shiftType!=='night'?'selected':''}>Day</option>
-          <option value="night" ${rota?.shiftType==='night'?'selected':''}>Night</option>
-        </select>
-      </label>
-    </div>
-  `, async (fd) => {
-    const data = {
-      date: fd.get('date'),
-      siteId: fd.get('siteId'),
-      officerId: fd.get('officerId'),
-      startTime: fd.get('startTime'),
-      endTime: fd.get('endTime'),
-      breakMinutes: parseInt(fd.get('breakMinutes')||'0',10),
-      shiftType: fd.get('shiftType')
-    };
-    // Check overlap (exclude current shift if editing)
-    const existing = await getRotasForRange(data.date, data.date);
-    const others = existing.filter(x => x.officerId===data.officerId && (!rota || x.id!==rota.id));
-    if(hasOverlap(others, data)){
-      throw new Error('Conflict: this officer already has an overlapping shift on that date.');
-    }
-    if(rota) await updateRota(rota.id, data);
-    else await addRota(data);
-    toast(rota?'Shift updated':'Shift added');
-    renderRotaPage(container);
-  });
-}
-
-/* =========================================================
-   PAYROLL PAGE
-   ========================================================= */
-async function renderPayrollPage(c){
-  const now = new Date();
-  const defaultMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  const officerOpts = state.officers.map(o=>`<option value="${o.id}">${o.name}</option>`).join('');
-
-  c.innerHTML = `
-    <div class="page-header"><h2>Payroll</h2></div>
-    <div class="card">
-      <div class="form-row">
-        <label><span>Officer</span><select id="pay-officer">${officerOpts}</select></label>
-        <label><span>Month</span><input type="month" id="pay-month" value="${defaultMonth}"></label>
-      </div>
-      <div style="display:flex;gap:.5rem;margin-top:.5rem">
-        <button class="primary" id="btn-calc-pay">Calculate salary</button>
-        <button id="btn-load-payroll">Load saved payroll records</button>
-      </div>
-    </div>
-    <div id="pay-result"></div>
-  `;
-
-  document.getElementById('btn-calc-pay').onclick = async () => {
-    const officerId = document.getElementById('pay-officer').value;
-    const month = document.getElementById('pay-month').value;
-    if(!officerId || !month) return toast('Select officer and month','error');
-    const result = await calculateMonthlySalary(officerId, month);
-    const siteMap = Object.fromEntries(state.sites.map(s=>[s.id,s]));
-    const div = document.getElementById('pay-result');
-    div.innerHTML = `
-      <div class="card">
-        <h3 style="color:var(--primary);margin-bottom:.7rem">${result.officerName} — ${result.month}</h3>
-        <div class="stats" style="margin-bottom:1rem">
-          <div class="stat-card"><div class="label">Total Hours</div><div class="value">${result.totalHours}</div></div>
-          <div class="stat-card"><div class="label">Gross Pay</div><div class="value">${fmtMoney(result.grossPay)}</div></div>
-          <div class="stat-card"><div class="label">Shifts</div><div class="value">${result.breakdown.length}</div></div>
-        </div>
-        ${result.breakdown.length===0 ? '<div class="empty">No shifts in this month.</div>' :
-          `<div class="table-wrap"><table><thead><tr>
-            <th>Date</th><th>Site</th><th>Start</th><th>End</th><th>Break</th><th>Hours</th><th>Pay</th>
-          </tr></thead><tbody>
-            ${result.breakdown.map(s=>`<tr>
-              <td>${s.date}</td>
-              <td>${siteMap[s.siteId]?.name||'—'}</td>
-              <td>${s.startTime}</td>
-              <td>${s.endTime}</td>
-              <td>${s.breakMinutes||0}m</td>
-              <td>${s.hours.toFixed(2)}</td>
-              <td>${fmtMoney(s.pay)}</td>
-            </tr>`).join('')}
-          </tbody></table></div>`}
-        <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap">
-          <button class="primary" id="btn-save-payroll">Save to payroll history</button>
-          <button id="btn-ts-pdf">Download timesheet PDF</button>
-          <button id="btn-ps-pdf">Download payslip PDF</button>
-        </div>
-      </div>`;
-    document.getElementById('btn-save-payroll').onclick = async () => {
-      await savePayroll(result);
-      toast('Payroll saved to history');
-    };
-    document.getElementById('btn-ts-pdf').onclick = () => generateTimesheetPDF(result, siteMap);
-    document.getElementById('btn-ps-pdf').onclick = () => generatePayslipPDF(result);
-  };
-
-  document.getElementById('btn-load-payroll').onclick = async () => {
-    const month = document.getElementById('pay-month').value;
-    const records = await getPayrollForMonth(month);
-    const div = document.getElementById('pay-result');
-    if(records.length===0){
-      div.innerHTML = '<div class="card"><div class="empty">No saved payroll for this month.</div></div>';
-      return;
-    }
-    div.innerHTML = `
-      <div class="card">
-        <h3 style="color:var(--primary);margin-bottom:.7rem">Saved Payroll — ${month}</h3>
-        <div class="table-wrap"><table><thead><tr>
-          <th>Officer</th><th>Total Hours</th><th>Gross Pay</th><th>Shifts</th>
-        </tr></thead><tbody>
-          ${records.map(r=>`<tr>
-            <td>${r.officerName||'—'}</td>
-            <td>${r.totalHours}</td>
-            <td>${fmtMoney(r.grossPay)}</td>
-            <td>${r.breakdown?.length||0}</td>
-          </tr>`).join('')}
-        </tbody></table></div>
-      </div>`;
-  };
-}
-
-/* =========================================================
-   INVOICES PAGE
-   ========================================================= */
-async function renderInvoicesPage(c){
-  const invoices = await getInvoices();
-  c.innerHTML = `
-    <div class="page-header">
-      <h2>Invoices</h2>
-      <div class="page-actions">
-        <button class="primary" id="btn-gen-inv">+ Generate invoice from hours</button>
-      </div>
-    </div>
-    <div class="card">
-      ${invoices.length===0 ? '<div class="empty">No invoices yet.</div>' :
-        `<div class="table-wrap"><table><thead><tr>
-          <th>Invoice #</th><th>Client</th><th>Period</th><th>Subtotal</th><th>VAT</th><th>Total</th><th>Status</th><th>Actions</th>
-        </tr></thead><tbody>
-        ${invoices.map(inv=>`<tr>
-          <td><strong>${inv.invoiceNumber}</strong></td>
-          <td>${inv.clientName||'—'}</td>
-          <td>${inv.period||'—'}</td>
-          <td>${fmtMoney(inv.subtotal)}</td>
-          <td>${fmtMoney(inv.vatAmount)}</td>
-          <td><strong>${fmtMoney(inv.total)}</strong></td>
-          <td><span class="badge ${inv.status||'unpaid'}">${inv.status||'unpaid'}</span></td>
-          <td>
-            <button class="sm" data-pdf-inv="${inv.id}">PDF</button>
-            <button class="sm" data-toggle-inv="${inv.id}">${inv.status==='paid'?'Mark unpaid':'Mark paid'}</button>
-            <button class="sm danger" data-del-inv="${inv.id}">Delete</button>
-          </td>
-        </tr>`).join('')}
-        </tbody></table></div>`}
-    </div>`;
-
-  document.getElementById('btn-gen-inv').onclick = () => invoiceGenModal(c);
-
-  c.querySelectorAll('[data-pdf-inv]').forEach(b => b.onclick = () => {
-    const inv = invoices.find(i=>i.id===b.dataset.pdfInv);
-    generateInvoicePDF(inv);
-  });
-  c.querySelectorAll('[data-toggle-inv]').forEach(b => b.onclick = async () => {
-    const inv = invoices.find(i=>i.id===b.dataset.toggleInv);
-    await updateInvoice(inv.id, { status: inv.status==='paid'?'unpaid':'paid' });
-    renderInvoicesPage(c);
-  });
-  c.querySelectorAll('[data-del-inv]').forEach(b => b.onclick = () => {
-    confirmAction('Delete this invoice?', async ()=>{
-      await deleteInvoice(b.dataset.delInv); toast('Invoice deleted'); renderInvoicesPage(c);
-    });
-  });
-}
-
-function invoiceGenModal(container){
-  const now = new Date();
-  const defaultMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  showModal('Generate Invoice', `
-    <label><span>Billing month *</span><input name="month" type="month" required value="${defaultMonth}"></label>
-    <label><span>Client name *</span><input name="clientName" required placeholder="Acme Corporation Ltd"></label>
-    <label><span>VAT rate (%)</span><input name="vatRate" type="number" step="0.01" value="20"></label>
-    <p class="hint">Hours and totals are calculated from saved rota records and each site's billing rate.</p>
-  `, async (fd) => {
-    const month = fd.get('month');
-    const vatRate = parseFloat(fd.get('vatRate'))||0;
-    const start = `${month}-01`, end = `${month}-31`;
-    const rotas = await getRotasForRange(start, end);
-    if(rotas.length===0) throw new Error('No shifts found for that month. Add shifts first.');
-    const siteHours = aggregateHoursBySite(rotas);
-    const lineItems = [];
-    let subtotal = 0;
-    Object.entries(siteHours).forEach(([siteId, hours]) => {
-      const site = state.sites.find(s=>s.id===siteId);
-      if(!site || !site.billingRate) return;
-      const amount = hours * site.billingRate;
-      lineItems.push({
-        description: `${site.name} — security cover`,
-        hours, rate: site.billingRate, amount
-      });
-      subtotal += amount;
-    });
-    if(lineItems.length===0) throw new Error('No billable hours. Check site billing rates.');
-    const vatAmount = subtotal * (vatRate/100);
-    const total = subtotal + vatAmount;
-    const invoice = {
-      invoiceNumber: 'INV-' + Date.now(),
-      clientName: fd.get('clientName').trim(),
-      siteName: lineItems.length+' site(s)',
-      period: month,
-      lineItems,
-      subtotal: Math.round(subtotal*100)/100,
-      vatRate,
-      vatAmount: Math.round(vatAmount*100)/100,
-      total: Math.round(total*100)/100,
-      status: 'unpaid'
-    };
-    await saveInvoice(invoice);
-    toast('Invoice generated');
-    renderInvoicesPage(container);
-    generateInvoicePDF(invoice);
-  });
-}
-
-/* =========================================================
-   REPORTS PAGE
-   ========================================================= */
-async function renderReportsPage(c){
-  const rotas = await getRotasForRange('2000-01-01','2099-12-31');
-  const siteHours = aggregateHoursBySite(rotas);
-  const officerHours = aggregateHoursByOfficer(rotas);
-  const invoices = await getInvoices();
-
-  const monthlyRevenue = {};
-  invoices.forEach(i => {
-    if(!i.period) return;
-    monthlyRevenue[i.period] = (monthlyRevenue[i.period]||0) + (i.total||0);
-  });
-
-  const outstanding = invoices.filter(i=>i.status!=='paid');
-
-  c.innerHTML = `
-    <div class="page-header"><h2>Reports & Analytics</h2></div>
-
-    <div class="card">
-      <h3 style="color:var(--primary);margin-bottom:.7rem">Total hours per site</h3>
-      ${Object.keys(siteHours).length===0?'<div class="empty">No data.</div>':
-        `<div class="table-wrap"><table><thead><tr><th>Site</th><th>Client</th><th>Total Hours</th><th>Est. Revenue</th></tr></thead><tbody>
-          ${Object.entries(siteHours).map(([id,hrs])=>{
-            const s = state.sites.find(x=>x.id===id);
-            const revenue = s?.billingRate ? hrs*s.billingRate : 0;
-            return `<tr><td>${s?.name||'—'}</td><td>${s?.clientName||'—'}</td><td>${hrs}</td><td>${fmtMoney(revenue)}</td></tr>`;
-          }).join('')}
-        </tbody></table></div>`}
-    </div>
-
-    <div class="card">
-      <h3 style="color:var(--primary);margin-bottom:.7rem">Total hours per officer</h3>
-      ${Object.keys(officerHours).length===0?'<div class="empty">No data.</div>':
-        `<div class="table-wrap"><table><thead><tr><th>Officer</th><th>Total Hours</th><th>Shifts</th></tr></thead><tbody>
-          ${Object.entries(officerHours).map(([id,d])=>{
-            const o = state.officers.find(x=>x.id===id);
-            return `<tr><td>${o?.name||'—'}</td><td>${d.totalHours}</td><td>${d.shifts.length}</td></tr>`;
-          }).join('')}
-        </tbody></table></div>`}
-    </div>
-
-    <div class="card">
-      <h3 style="color:var(--primary);margin-bottom:.7rem">Monthly revenue</h3>
-      ${Object.keys(monthlyRevenue).length===0?'<div class="empty">No invoices yet.</div>':
-        `<div class="table-wrap"><table><thead><tr><th>Month</th><th>Invoiced Total</th></tr></thead><tbody>
-          ${Object.entries(monthlyRevenue).sort().map(([m,v])=>`<tr><td>${m}</td><td>${fmtMoney(v)}</td></tr>`).join('')}
-        </tbody></table></div>`}
-    </div>
-
-    <div class="card">
-      <h3 style="color:var(--primary);margin-bottom:.7rem">Outstanding invoices</h3>
-      ${outstanding.length===0?'<div class="empty">All invoices are paid. 🎉</div>':
-        `<div class="table-wrap"><table><thead><tr><th>Invoice #</th><th>Client</th><th>Period</th><th>Total</th><th>Status</th></tr></thead><tbody>
-          ${outstanding.map(i=>`<tr><td>${i.invoiceNumber}</td><td>${i.clientName}</td><td>${i.period}</td><td>${fmtMoney(i.total)}</td><td><span class="badge ${i.status}">${i.status}</span></td></tr>`).join('')}
-        </tbody></table></div>`}
-    </div>
-  `;
-}
-</script>
-</body>
-</html>
+firebase.initializeApp({apiKey:"AIzaSyDJN1soJO5fRTBqqMdC7LWVIFZ8AB8F1FY",authDomain:"security-27dc5.firebaseapp.com",projectId:"security-27dc5",storageBucket:"security-27dc5.firebasestorage.app",messagingSenderId:"955382240975",appId:"1:955382240975:web:4e6c98666d2d88c1d2c9ba",measurementId:"G-0XTERCLLTC"});
+const auth=firebase.auth(),db=firebase.firestore();
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const iso=d=>{const z=new Date(d);return z.getFullYear()+'-'+String(z.getMonth()+1).padStart(2,'0')+'-'+String(z.getDate()).padStart(2,'0')};
+const pd=s=>new Date(s+'T00:00:00'),add=(s,n)=>{const d=pd(s);d.setDate(d.getDate()+n);return iso(d)};
+const mon=s=>{const d=pd(s);d.setDate(d.getDate()-((d.getDay()+6)%7));return iso(d)};
+const fmt=s=>pd(s).toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+const gbp=n=>'£'+(+n||0).toFixed(2),r2=n=>Math.round(n*100)/100,tm=t=>{const[a,b]=t.split(':');return+a*60+ +b};
+const nm=(c,id)=>(S[c].find(x=>x.id==id)||{}).name||'(deleted)',toast=m=>{const t=$('#toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',4000)};
+const DEF={co:'Your Security Ltd',addr:'',phone:'',email:'',vatNo:'',vat:20,terms:30,bank:'',ot:40,otM:1.5,wkM:1.25,nM:1.2,bhM:2,
+bh:'2026-12-25,2026-12-28,2027-01-01,2027-03-26,2027-03-29,2027-05-03,2027-05-31,2027-08-30,2027-12-27,2027-12-28'};
+const S={sites:[],officers:[],shifts:[],invoices:[],payroll:[],cfg:{...DEF}};let view='dash',week=mon(iso(new Date())),month=iso(new Date()).slice(0,7),ui={site:'',mode:'week',off:''},unsub=[];
+const put=(c,id,o)=>id?db.collection(c).doc(id).set(o,{merge:true}):db.collection(c).add({...o,created:Date.now()});
+const del=async(c,id)=>{if(confirm('Delete this record?'))try{await db.collection(c).doc(id).delete()}catch(e){toast(e.message)}};
+/* ---------- auth ---------- */
+$('#lf').onsubmit=async e=>{e.preventDefault();try{await auth.signInWithEmailAndPassword($('#em').value,$('#pw').value)}catch(x){$('#lerr').textContent=x.message}};
+const forgot=()=>{const m=$('#em').value;if(!m)return $('#lerr').textContent='Enter your email first.';auth.sendPasswordResetEmail(m).then(()=>$('#lerr').textContent='Reset email sent.')};
+auth.onAuthStateChanged(u=>{unsub.forEach(f=>f());unsub=[];$('#login').style.display=u?'none':'block';$('#app').style.display=u?'block':'none';if(u){listen();nav()}});
+function listen(){['sites','officers','shifts','invoices','payroll'].forEach(c=>unsub.push(db.collection(c).onSnapshot(q=>{S[c]=q.docs.map(d=>({id:d.id,...d.data()}));render()},e=>toast(e.message))));
+unsub.push(db.doc('settings/main').onSnapshot(d=>{S.cfg={...DEF,...(d.data()||{})};render()}))}
+/* ---------- calculations ---------- */
+const span=s=>{let a=tm(s.start),b=tm(s.end);if(b<=a)b+=1440;return[a,b]};
+const hrs=s=>{const[a,b]=span(s);return Math.max(0,(b-a-(+s.brk||0))/60)};
+const nightFrac=s=>{const[a,b]=span(s);let n=0;for(let m=a;m<b;m++){const x=m%1440;if(x>=1320||x<360)n++}return n/(b-a)};
+const bhs=()=>S.cfg.bh.split(/[\s,]+/);
+function mult(s){const C=S.cfg,d=pd(s.date).getDay();let m=1;if(bhs().includes(s.date))m=C.bhM;else if(d==0||d==6)m=C.wkM;const f=nightFrac(s);return m*(1-f)+Math.max(m,C.nM)*f}
+function clash(s,id,extra=[]){const day=x=>Math.round(pd(x)/864e5),[a,b]=span(s),A=day(s.date)*1440+a,B=day(s.date)*1440+b;
+return[...S.shifts,...extra].find(x=>{if(x.id===id||x.officerId!=s.officerId)return false;const[c,d]=span(x),C=day(x.date)*1440+c,D=day(x.date)*1440+d;return A<D&&C<B})}
+function calcPay(o,m){const C=S.cfg,wk={},L=[];let h=0,ot=0,pay=0;
+for(const s of S.shifts.filter(s=>s.officerId==o.id).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start))){
+const x=hrs(s),w=mon(s.date),before=wk[w]||0;wk[w]=before+x;if(!s.date.startsWith(m))continue;
+const o2=Math.max(0,Math.min(x,before+x-C.ot)),k=mult(s),p=(x-o2)*o.rate*k+o2*o.rate*Math.max(k,C.otM);L.push({s,h:x,ot:o2,k,p});h+=x;ot+=o2;pay+=p}
+return{h,ot,pay:r2(pay),L}}
+const inM=(m,f)=>S.shifts.filter(s=>s.date.startsWith(m)&&(!f||f(s)));
+const status=i=>(i.paid>=i.total-.005?['Paid','ok']:i.paid>0?['Partial','']:['Unpaid','bad']);
+/* ---------- UI plumbing ---------- */
+const NAV=[['dash','Dashboard'],['sites','Sites'],['officers','Officers'],['rota','Rota'],['payroll','Payroll'],['invoices','Invoices'],['reports','Reports'],['set','Settings']];
+function nav(){$('#nav').innerHTML='<h2>🛡️ GuardOps</h2>'+NAV.map(n=>`<a class="${view==n[0]?'on':''}" onclick="view='${n[0]}';nav();render()">${n[1]}</a>`).join('')+'<a onclick="auth.signOut()">Sign out</a>';render()}
+const M=h=>{$('#dlg').innerHTML=h;$('#dlg').showModal()},closeM=()=>$('#dlg').close();
+function form(title,F,v,save){let h=`<h3>${title}</h3><form id="f">`;
+F.forEach(f=>{const val=v[f.k]??f.d??'';h+=`<label>${f.l}</label>`;
+if(f.t=='sel')h+=`<select name="${f.k}">${f.o.map(o=>`<option value="${esc(o[0])}" ${o[0]==val?'selected':''}>${esc(o[1])}</option>`).join('')}</select>`;
+else if(f.t=='chk')h+=`<div class="chk">${f.o.map(o=>`<label><input type="checkbox" name="${f.k}" value="${o[0]}" ${(v[f.k]||[]).includes(o[0])?'checked':''}> ${esc(o[1])}</label>`).join('')||'<i>none available</i>'}</div>`;
+else if(f.t=='ta')h+=`<textarea name="${f.k}" rows="3">${esc(val)}</textarea>`;
+else h+=`<input name="${f.k}" type="${f.t||'text'}" value="${esc(val)}" ${f.r?'required':''} ${f.t=='number'?'step="any"':''}>`});
+M(h+'<br><div class="bar"><button class="btn">Save</button><button type="button" class="btn ghost" onclick="closeM()">Cancel</button></div></form>');
+$('#f').onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.target),o={};F.forEach(f=>o[f.k]=f.t=='chk'?fd.getAll(f.k):f.t=='number'?+fd.get(f.k):fd.get(f.k));
+try{await save(o);closeM()}catch(x){toast(x.message)}}}
+const tbl=(H,R)=>`<div class="w"><table><tr>${H.map(h=>`<th>${h}</th>`).join('')}</tr>${R.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${H.length}" style="color:var(--mu)">No records yet.</td></tr>`}</table></div>`;
+const btn=(t,f,c='')=>`<button class="btn sm ${c}" onclick="${f}">${t}</button> `;
+const mpick=()=>`<input type="month" value="${month}" onchange="month=this.value||month;render()">`;
+function render(){if(!auth.currentUser)return;const V={dash:dashV,sites:sitesV,officers:officersV,rota:rotaV,payroll:payrollV,invoices:invoicesV,reports:reportsV,set:setV};
+$('#main').innerHTML=`<h1>${NAV.find(n=>n[0]==view)[1]}</h1>`+V[view]()}
+/* ---------- dashboard ---------- */
+function dashV(){const wk=S.shifts.filter(s=>s.date>=week&&s.date<=add(week,6)),mh=inM(month).reduce((a,s)=>a+hrs(s),0),
+pay=S.officers.reduce((a,o)=>a+calcPay(o,month).pay,0),inv=S.invoices.filter(i=>i.date.startsWith(month)),out=S.invoices.reduce((a,i)=>a+i.total-i.paid,0);
+const st=[['Sites',S.sites.length],['Active officers',S.officers.filter(o=>o.status!='Inactive').length],['Shifts this week',wk.length],['Hours this week',r2(wk.reduce((a,s)=>a+hrs(s),0))],
+['Hours '+month,r2(mh)],['Est. payroll '+month,gbp(pay)],['Invoiced '+month,gbp(inv.reduce((a,i)=>a+i.total,0))],['Outstanding',gbp(out)]];
+const exp=S.officers.filter(o=>o.siaExpiry&&o.siaExpiry<=add(iso(new Date()),60));
+return`<div class="grid">${st.map(s=>`<div class="card stat"><b>${s[1]}</b><span>${s[0]}</span></div>`).join('')}</div>
+<div class="card"><b>SIA licences expired / expiring within 60 days</b>${tbl(['Officer','Licence','Expiry'],exp.map(o=>[esc(o.name),esc(o.sia),`<span class="tag bad">${o.siaExpiry}</span>`]))}</div>`}
+/* ---------- sites ---------- */
+function sitesV(){return`<div class="bar">${btn('+ Add site',"siteF()")}</div><div class="card">`+tbl(['Site','Client','Address','Contact','Rate/hr','Officers',''],S.sites.map(s=>[esc(s.name),esc(s.client),esc(s.address),esc(s.contact)+' '+esc(s.phone),gbp(s.rate),
+S.officers.filter(o=>(o.sites||[]).includes(s.id)).map(o=>esc(o.name)).join(', '),btn('Edit',`siteF('${s.id}')`)+btn('Delete',`delSite('${s.id}')`,'red')]))+'</div>'}
+function siteF(id){const v=S.sites.find(s=>s.id==id)||{};form(id?'Edit site':'Add site',[{k:'name',l:'Site name',r:1},{k:'client',l:'Client name',r:1},{k:'address',l:'Site address',t:'ta'},{k:'billAddr',l:'Client billing address',t:'ta'},{k:'contact',l:'Contact name'},{k:'phone',l:'Phone'},{k:'email',l:'Email',t:'email'},{k:'rate',l:'Billing rate (£/hr)',t:'number',r:1}],v,o=>put('sites',id,o))}
+function delSite(id){if(S.shifts.some(s=>s.siteId==id))return toast('Site has shifts – remove them first.');del('sites',id)}
+/* ---------- officers ---------- */
+function officersV(){return`<div class="bar">${btn('+ Register officer',"offF()")}Timesheet month: ${mpick()}</div><div class="card">`+tbl(['Name','Phone','SIA licence','Expiry','Rate/hr','Status','Sites',''],S.officers.map(o=>[esc(o.name),esc(o.phone),esc(o.sia),esc(o.siaExpiry),gbp(o.rate),`<span class="tag ${o.status=='Inactive'?'bad':'ok'}">${esc(o.status||'Active')}</span>`,(o.sites||[]).map(i=>esc(nm('sites',i))).join(', '),
+btn('Profile',`prof('${o.id}')`,'ghost')+btn('Edit',`offF('${o.id}')`)+btn('Timesheet',`timesheet('${o.id}')`,'ghost')+btn('Delete',`delOff('${o.id}')`,'red')]))+'</div>'}
+function offF(id){const v=S.officers.find(s=>s.id==id)||{};form(id?'Edit officer':'Register officer',[{k:'name',l:'Full name',r:1},{k:'phone',l:'Phone'},{k:'email',l:'Email',t:'email'},{k:'address',l:'Address',t:'ta'},{k:'ni',l:'NI number'},{k:'sia',l:'SIA licence number'},{k:'siaType',l:'SIA licence type',d:'Door Supervisor'},{k:'siaExpiry',l:'SIA expiry',t:'date'},{k:'rate',l:'Hourly pay rate (£)',t:'number',r:1},{k:'status',l:'Status',t:'sel',o:[['Active','Active'],['On leave','On leave'],['Inactive','Inactive']]},{k:'sites',l:'Assigned sites',t:'chk',o:S.sites.map(s=>[s.id,s.name])}],v,o=>put('officers',id,o))}
+function delOff(id){if(S.shifts.some(s=>s.officerId==id))return toast('Officer has shifts – set status to Inactive instead.');del('officers',id)}
+function prof(id){const o=S.officers.find(x=>x.id==id),p=calcPay(o,month),up=S.shifts.filter(s=>s.officerId==id&&s.date>=iso(new Date())).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,8);
+M(`<h3>${esc(o.name)} <span class="tag">${esc(o.status||'Active')}</span></h3><p>${esc(o.phone)} · ${esc(o.email)}<br>${esc(o.address)}<br>SIA: ${esc(o.sia)} (${esc(o.siaType)}) exp ${esc(o.siaExpiry)}<br>Rate ${gbp(o.rate)}/hr · NI ${esc(o.ni)}</p>
+<p><b>${month}:</b> ${r2(p.h)}h worked, ${r2(p.ot)}h overtime, gross ${gbp(p.pay)}</p><b>Upcoming shifts</b>${tbl(['Date','Site','Time'],up.map(s=>[fmt(s.date),esc(nm('sites',s.siteId)),s.start+'–'+s.end]))}<br><button class="btn ghost" onclick="closeM()">Close</button>`)}
+/* ---------- rota ---------- */
+function rotaV(){const days=[...Array(7)].map((_,i)=>add(week,i)),sf=ui.site,offs=S.officers.filter(o=>o.status!='Inactive');
+let h=`<div class="bar"><button class="btn ghost" onclick="week=add(week,-7);render()">‹</button><input type="date" value="${week}" onchange="week=mon(this.value);render()"><button class="btn ghost" onclick="week=add(week,7);render()">›</button>
+<select onchange="ui.mode=this.value;render()">${[['week','Weekly grid'],['month','Monthly list'],['off','Officer view']].map(m=>`<option value="${m[0]}" ${ui.mode==m[0]?'selected':''}>${m[1]}</option>`).join('')}</select>
+<select onchange="ui.site=this.value;render()"><option value="">All sites</option>${S.sites.map(s=>`<option value="${s.id}" ${sf==s.id?'selected':''}>${esc(s.name)}</option>`).join('')}</select>
+${ui.mode=='off'?`<select onchange="ui.off=this.value;render()"><option value="">Select officer</option>${S.officers.map(o=>`<option value="${o.id}" ${ui.off==o.id?'selected':''}>${esc(o.name)}</option>`).join('')}</select>`:''}
+${ui.mode=='month'?mpick():''}</div><div class="bar">${btn('+ Add shift',"shiftF()")}${btn('Copy previous week here',"copyWeek(add(week,-7),week)",'ghost')}${btn('Duplicate to next week',"copyWeek(week,add(week,7))",'ghost')}
+${btn('Weekly rota PDF',"rotaPdf()",'ghost')}${btn('Print',"rotaPdf(1)",'ghost')}${btn('Officer rota PDF',"offRotaPdf()",'ghost')}${btn('Monthly schedule PDF',"monthPdf()",'ghost')}</div>`;
+if(ui.mode=='week'){h+=`<div class="card w"><table><tr><th>Officer</th>${days.map(d=>`<th>${fmt(d).slice(0,10)}</th>`).join('')}<th>Hours</th></tr>`;
+offs.forEach(o=>{let tot=0;h+=`<tr><td><b>${esc(o.name)}</b></td>`+days.map(d=>{const L=S.shifts.filter(s=>s.officerId==o.id&&s.date==d&&(!sf||s.siteId==sf));L.forEach(s=>tot+=hrs(s));
+return'<td>'+L.map(s=>`<span class="chip ${nightFrac(s)>.5?'n':''}" onclick="shiftF('${s.id}')">${esc(nm('sites',s.siteId))}<br>${s.start}–${s.end} (${r2(hrs(s))}h)</span>`).join('')+`<a style="cursor:pointer;color:var(--mu)" onclick="shiftF('',null,'${o.id}','${d}')">＋</a></td>`}).join('')+`<td>${r2(tot)}</td></tr>`});
+return h+'</table></div>'}
+const rows=ui.mode=='month'?inM(month,s=>!sf||s.siteId==sf):S.shifts.filter(s=>s.officerId==ui.off&&s.date>=week&&s.date<=add(week,6)&&(!sf||s.siteId==sf));
+rows.sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
+return h+'<div class="card">'+tbl(['Date','Officer','Site','Start','End','Break','Hours',''],rows.map(s=>[fmt(s.date),esc(nm('officers',s.officerId)),esc(nm('sites',s.siteId)),s.start,s.end,s.brk+'m',r2(hrs(s)),btn('Edit',`shiftF('${s.id}')`)]))+`<p><b>Total: ${r2(rows.reduce((a,s)=>a+hrs(s),0))} h</b></p></div>`}
+function shiftF(id,_,oid,date){const v=S.shifts.find(s=>s.id==id)||{officerId:oid,date,start:'07:00',end:'19:00',brk:30,siteId:ui.site};
+form(id?'Edit shift':'Add shift',[{k:'officerId',l:'Officer',t:'sel',o:S.officers.filter(o=>o.status!='Inactive'||o.id==v.officerId).map(o=>[o.id,o.name])},{k:'siteId',l:'Site',t:'sel',o:S.sites.map(s=>[s.id,s.name])},{k:'date',l:'Date',t:'date',r:1},{k:'start',l:'Start',t:'time',r:1},{k:'end',l:'Finish (earlier than start = overnight)',t:'time',r:1},{k:'brk',l:'Unpaid break (minutes)',t:'number'}],v,async o=>{
+if(!o.officerId||!o.siteId)throw Error('Add an officer and a site first.');const c=clash(o,id);if(c)throw Error(`Clash: already on ${nm('sites',c.siteId)} ${c.date} ${c.start}–${c.end}`);await put('shifts',id,o)});
+if(id)$('#f').insertAdjacentHTML('beforeend',`<br><button type="button" class="btn red sm" onclick="del('shifts','${id}').then(closeM)">Delete shift</button>`)}
+async function copyWeek(from,to){const diff=Math.round((pd(to)-pd(from))/864e5),b=db.batch(),tmp=[];let n=0,k=0;
+for(const s of S.shifts.filter(s=>s.date>=from&&s.date<=add(from,6))){const{id,...r}=s;r.date=add(s.date,diff);if(clash(r,null,tmp)){k++;continue}tmp.push(r);b.set(db.collection('shifts').doc(),{...r,created:Date.now()});n++}
+if(!n&&!k)return toast('No shifts to copy.');await b.commit();toast(`${n} shift(s) copied${k?`, ${k} skipped (clash/duplicate)`:''}.`)}
+/* ---------- PDF ---------- */
+const J=()=>new window.jspdf.jsPDF({orientation:'landscape'}),P=()=>new window.jspdf.jsPDF();
+function head(d,t,sub){const C=S.cfg,w=d.internal.pageSize.getWidth();d.setFillColor(15,52,96);d.rect(0,0,w,24,'F');d.setTextColor(255);d.setFontSize(16);d.text(C.co,12,11);d.setFontSize(8);d.text([C.addr,C.phone+' '+C.email].filter(Boolean).join(' | '),12,18);
+d.setFontSize(13);d.text(t,w-12,11,{align:'right'});d.setFontSize(9);d.text(sub||'',w-12,18,{align:'right'});d.setTextColor(0);return 32}
+const tab=(d,y,H,B,o={})=>{d.autoTable({startY:y,head:[H],body:B,theme:'grid',styles:{fontSize:8},headStyles:{fillColor:[15,52,96]},...o});return d.lastAutoTable.finalY+6};
+function out(d,name,pr){const n=d.getNumberOfPages();for(let i=1;i<=n;i++){d.setPage(i);d.setFontSize(7);d.setTextColor(120);d.text(`Generated ${new Date().toLocaleString('en-GB')} · Page ${i}/${n}`,12,d.internal.pageSize.getHeight()-6)}
+if(pr){d.autoPrint();window.open(d.output('bloburl'))}else d.save(name)}
+function rotaPdf(pr){const d=J(),days=[...Array(7)].map((_,i)=>add(week,i)),sites=ui.site?S.sites.filter(s=>s.id==ui.site):S.sites.filter(s=>S.shifts.some(x=>x.siteId==s.id&&x.date>=week&&x.date<=add(week,6)));if(!sites.length)return toast('No shifts this week.');
+sites.forEach((s,i)=>{if(i)d.addPage();let y=head(d,'WEEKLY ROTA',`${fmt(week)} – ${fmt(add(week,6))}`);d.setFontSize(10);d.text(`Site: ${s.name}  |  Client: ${s.client||''}  |  ${s.address||''}`,12,y-2);
+const rows=S.officers.filter(o=>S.shifts.some(x=>x.siteId==s.id&&x.officerId==o.id&&x.date>=week&&x.date<=add(week,6))).map(o=>{let t=0;const r=[o.name,...days.map(dt=>S.shifts.filter(x=>x.siteId==s.id&&x.officerId==o.id&&x.date==dt).map(x=>{t+=hrs(x);return`${x.start}-${x.end}\n(${r2(hrs(x))}h)`}).join('\n')||'-')];r.push(r2(t));return r});
+tab(d,y+2,['Officer',...days.map(x=>fmt(x).slice(0,10)),'Total h'],rows)});out(d,`rota_${week}.pdf`,pr)}
+function offRotaPdf(){const id=ui.off||prompt('Select an officer in "Officer view" first.')&&'';if(!ui.off)return toast('Choose Officer view and select an officer first.');const o=S.officers.find(x=>x.id==ui.off),d=P();let y=head(d,'OFFICER ROTA',`${fmt(week)} – ${fmt(add(week,6))}`);d.setFontSize(10);d.text(`Officer: ${o.name}   SIA: ${o.sia||'-'}`,12,y-2);
+const L=S.shifts.filter(s=>s.officerId==o.id&&s.date>=week&&s.date<=add(week,6)).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
+y=tab(d,y+2,['Date','Site','Address','Start','End','Break','Hours'],L.map(s=>{const st=S.sites.find(x=>x.id==s.siteId)||{};return[fmt(s.date),st.name,st.address||'',s.start,s.end,s.brk+'m',r2(hrs(s))]}));d.text(`Total hours: ${r2(L.reduce((a,s)=>a+hrs(s),0))}`,12,y);out(d,`rota_${o.name}_${week}.pdf`)}
+function monthPdf(){const d=J();let y=head(d,'MONTHLY SCHEDULE',month);const L=inM(month,s=>!ui.site||s.siteId==ui.site).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
+y=tab(d,y,['Date','Site','Officer','Start','End','Break','Hours'],L.map(s=>[fmt(s.date),nm('sites',s.siteId),nm('officers',s.officerId),s.start,s.end,s.brk+'m',r2(hrs(s))]));d.text(`Total hours: ${r2(L.reduce((a,s)=>a+hrs(s),0))}`,12,y);out(d,`schedule_${month}.pdf`)}
+function timesheet(id){const o=S.officers.find(x=>x.id==id),p=calcPay(o,month),d=P();let y=head(d,'TIMESHEET',month);d.setFontSize(10);d.text(`${o.name}  |  SIA ${o.sia||'-'}`,12,y-2);
+y=tab(d,y+2,['Date','Site','Start','End','Break','Hours'],p.L.map(l=>[fmt(l.s.date),nm('sites',l.s.siteId),l.s.start,l.s.end,l.s.brk+'m',r2(l.h)]));d.text(`Total: ${r2(p.h)} h (overtime ${r2(p.ot)} h)`,12,y);out(d,`timesheet_${o.name}_${month}.pdf`)}
+/* ---------- payroll ---------- */
+const prec=(o,m)=>S.payroll.find(p=>p.id==m+'_'+o.id)||{};
+function payrollV(){let tot=0;const rows=S.officers.map(o=>{const p=calcPay(o,month),r=prec(o,month);if(!p.h&&!r.id)return null;const net=r2(p.pay+(r.add||0)-(r.ded||0));tot+=net;
+return[esc(o.name),r2(p.h),r2(p.ot),gbp(o.rate),gbp(p.pay),gbp(r.add),gbp(r.ded),'<b>'+gbp(net)+'</b>',`<span class="tag ${r.status=='Paid'?'ok':'bad'}">${r.status||'Unpaid'}</span>`,
+btn('Adjust',`adjF('${o.id}')`)+btn(r.status=='Paid'?'Mark unpaid':'Mark paid',`setPaid('${o.id}')`,'ghost')+btn('Payslip',`payslip('${o.id}')`,'ghost')]}).filter(Boolean);
+return`<div class="bar">${mpick()}<span>Rates: OT >${S.cfg.ot}h/wk ×${S.cfg.otM}, weekend ×${S.cfg.wkM}, night ×${S.cfg.nM}, bank hol ×${S.cfg.bhM} (change in Settings)</span></div><div class="card">`+tbl(['Officer','Hours','OT h','Rate','Gross','Additions','Deductions','Net','Status',''],rows)+`<p><b>Total net payroll: ${gbp(tot)}</b></p></div>
+<div class="card"><b>Payroll history (saved)</b>`+tbl(['Month','Officer','Gross','Net','Status','Paid on'],[...S.payroll].sort((a,b)=>b.month.localeCompare(a.month)).map(p=>[p.month,esc(nm('officers',p.officerId)),gbp(p.gross),gbp(p.net),p.status,p.paidOn||'']))+'</div>'}
+async function saveRec(o,extra){const p=calcPay(o,month),r=prec(o,month),n={...r,...extra};delete n.id;const rec={officerId:o.id,month,hours:r2(p.h),gross:p.pay,add:n.add||0,addNote:n.addNote||'',ded:n.ded||0,dedNote:n.dedNote||'',status:n.status||'Unpaid',paidOn:n.paidOn||''};rec.net=r2(rec.gross+rec.add-rec.ded);
+await db.collection('payroll').doc(month+'_'+o.id).set(rec)}
+function adjF(id){const o=S.officers.find(x=>x.id==id);form('Adjustments – '+o.name,[{k:'add',l:'Additional payment (£)',t:'number'},{k:'addNote',l:'Reason'},{k:'ded',l:'Deduction (£)',t:'number'},{k:'dedNote',l:'Reason'}],prec(o,month),x=>saveRec(o,x))}
+const setPaid=id=>{const o=S.officers.find(x=>x.id==id),paid=prec(o,month).status=='Paid';return saveRec(o,{status:paid?'Unpaid':'Paid',paidOn:paid?'':iso(new Date())})};
+function payslip(id){const o=S.officers.find(x=>x.id==id),p=calcPay(o,month),r=prec(o,month),d=P();let y=head(d,'PAYSLIP',month);d.setFontSize(10);d.text([`Employee: ${o.name}`,`Address: ${o.address||'-'}`,`NI: ${o.ni||'-'}   SIA: ${o.sia||'-'}`,`Hourly rate: ${gbp(o.rate)}`],12,y);
+y=tab(d,y+22,['Date','Site','Time','Hours','OT h','Multiplier','Amount'],p.L.map(l=>[fmt(l.s.date),nm('sites',l.s.siteId),l.s.start+'-'+l.s.end,r2(l.h),r2(l.ot),'×'+l.k.toFixed(2),gbp(l.p)]));
+const net=r2(p.pay+(r.add||0)-(r.ded||0));y=tab(d,y,['Summary','Amount'],[['Gross pay ('+r2(p.h)+' h)',gbp(p.pay)],['Additional: '+(r.addNote||'-'),gbp(r.add)],['Deductions: '+(r.dedNote||'-'),'-'+gbp(r.ded)],['NET PAY',gbp(net)],['Status',r.status||'Unpaid']],{tableWidth:100});
+d.setFontSize(7);d.text('Tax/NI/pension are not calculated by this system – enter them as deductions.',12,y);out(d,`payslip_${o.name}_${month}.pdf`)}
+/* ---------- invoices ---------- */
+function invoicesV(){return`<div class="bar">${btn('+ Generate invoice',"invF()")}</div><div class="card">`+tbl(['No.','Date','Client / site','Period','Subtotal','VAT','Total','Paid','Status',''],[...S.invoices].sort((a,b)=>b.number.localeCompare(a.number)).map(i=>{const s=status(i);return[i.number,i.date,esc(i.client)+' – '+esc(i.siteName),i.from+' → '+i.to,gbp(i.subtotal),gbp(i.vat),'<b>'+gbp(i.total)+'</b>',gbp(i.paid),`<span class="tag ${s[1]}">${s[0]}</span>`,
+btn('PDF',`invPdf('${i.id}')`,'ghost')+btn('Payment',`payF('${i.id}')`)+btn('Delete',`del('invoices','${i.id}')`,'red')]}))+'</div>'}
+function invF(){form('Generate invoice',[{k:'siteId',l:'Site',t:'sel',o:S.sites.map(s=>[s.id,s.name])},{k:'type',l:'Billing period',t:'sel',o:[['week','Weekly (week containing date)'],['month','Monthly (month containing date)'],['custom','Custom range']]},{k:'from',l:'Date / start',t:'date',d:week,r:1},{k:'to',l:'End (custom only)',t:'date'}],{},async o=>{
+const s=S.sites.find(x=>x.id==o.siteId);if(!s)throw Error('Add a site first.');let f=o.from,t=o.to||o.from;if(o.type=='week'){f=mon(o.from);t=add(f,6)}if(o.type=='month'){f=o.from.slice(0,8)+'01';const e=pd(f);e.setMonth(e.getMonth()+1);t=add(iso(e),-1)}
+const L=S.shifts.filter(x=>x.siteId==s.id&&x.date>=f&&x.date<=t).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start)).map(x=>({date:x.date,officer:nm('officers',x.officerId),time:x.start+'-'+x.end,hours:r2(hrs(x)),rate:+s.rate,amount:r2(hrs(x)*s.rate)}));
+if(!L.length)throw Error('No shifts at this site in that period.');if(S.invoices.some(i=>i.siteId==s.id&&i.from<=t&&i.to>=f)&&!confirm('An invoice already covers part of this period. Continue?'))throw Error('Cancelled.');
+const sub=r2(L.reduce((a,l)=>a+l.amount,0)),vr=+S.cfg.vat,vat=r2(sub*vr/100),n=Math.max(0,...S.invoices.map(i=>+i.number.split('-').pop()))+1;
+await put('invoices',null,{number:'INV-'+new Date().getFullYear()+'-'+String(n).padStart(4,'0'),date:iso(new Date()),due:add(iso(new Date()),+S.cfg.terms),siteId:s.id,siteName:s.name,client:s.client,billAddr:s.billAddr||s.address||'',from:f,to:t,lines:L,subtotal:sub,vatRate:vr,vat,total:r2(sub+vat),paid:0})})}
+function payF(id){const i=S.invoices.find(x=>x.id==id);form(`Payment – ${i.number} (balance ${gbp(i.total-i.paid)})`,[{k:'amt',l:'Amount received (£)',t:'number',r:1}],{amt:r2(i.total-i.paid)},o=>put('invoices',id,{paid:r2(Math.min(i.total,i.paid+o.amt))}))}
+function invPdf(id){const i=S.invoices.find(x=>x.id==id),C=S.cfg,d=P();let y=head(d,'INVOICE',i.number);d.setFontSize(9);d.text([`Bill to: ${i.client}`,...String(i.billAddr).split('\n'),'',`Site: ${i.siteName}`],12,y);
+d.text([`Invoice date: ${i.date}`,`Due: ${i.due}`,`Period: ${i.from} to ${i.to}`,C.vatNo?`VAT No: ${C.vatNo}`:''],130,y);
+y=tab(d,y+30,['Date','Officer','Time','Hours','Rate','Amount'],i.lines.map(l=>[fmt(l.date),l.officer,l.time,l.hours,gbp(l.rate),gbp(l.amount)]));
+y=tab(d,y,['Summary',''],[['Subtotal',gbp(i.subtotal)],[`VAT (${i.vatRate}%)`,gbp(i.vat)],['TOTAL',gbp(i.total)],['Paid',gbp(i.paid)],['BALANCE DUE',gbp(i.total-i.paid)]],{tableWidth:90,margin:{left:108}});
+d.setFontSize(9);d.text(['Payment details:',...String(C.bank||'').split('\n'),`Terms: ${C.terms} days`],12,y);out(d,`${i.number}.pdf`)}
+/* ---------- reports ---------- */
+function reportsV(){const sh=inM(month),by=(k,c)=>Object.entries(sh.reduce((a,s)=>(a[s[k]]=(a[s[k]]||0)+hrs(s),a),{})).map(([id,h])=>[esc(nm(c,id)),r2(h)]);
+const pr=S.officers.map(o=>{const p=calcPay(o,month),r=prec(o,month);return p.pay+(r.add||0)-(r.ded||0)}).reduce((a,b)=>a+b,0),inv=S.invoices.filter(i=>i.date.startsWith(month)),rev=inv.reduce((a,i)=>a+i.total,0),recv=inv.reduce((a,i)=>a+i.paid,0),o=S.invoices.filter(i=>i.paid<i.total);
+return`<div class="bar">${mpick()}</div><div class="grid"><div class="card stat"><b>${gbp(pr)}</b><span>Payroll</span></div><div class="card stat"><b>${gbp(rev)}</b><span>Revenue invoiced</span></div><div class="card stat"><b>${gbp(recv)}</b><span>Received on those</span></div><div class="card stat"><b>${gbp(rev-pr)}</b><span>Gross margin (invoiced − payroll)</span></div></div>
+<div class="card"><b>Hours per site</b>${tbl(['Site','Hours'],by('siteId','sites'))}</div><div class="card"><b>Hours per officer</b>${tbl(['Officer','Hours'],by('officerId','officers'))}</div>
+<div class="card"><b>Outstanding invoices</b>${tbl(['No.','Client','Due','Balance'],o.map(i=>[i.number,esc(i.client),i.due,'<b>'+gbp(i.total-i.paid)+'</b>']))}</div>`}
+/* ---------- settings ---------- */
+function setV(){return`<div class="card"><p>Company details, VAT and pay multipliers used for rotas, payslips and invoices.</p>${btn('Edit settings',"setF()")}<br><br>${esc(S.cfg.co)} · VAT ${S.cfg.vat}% · Payment terms ${S.cfg.terms} days</div>`}
+function setF(){form('Settings',[{k:'co',l:'Company name'},{k:'addr',l:'Address'},{k:'phone',l:'Phone'},{k:'email',l:'Email'},{k:'vatNo',l:'VAT number'},{k:'vat',l:'VAT %',t:'number'},{k:'terms',l:'Payment terms (days)',t:'number'},{k:'bank',l:'Bank details (for invoices)',t:'ta'},{k:'ot',l:'Overtime after (hours/week)',t:'number'},{k:'otM',l:'Overtime multiplier',t:'number'},{k:'wkM',l:'Weekend multiplier',t:'number'},{k:'nM',l:'Night multiplier (22:00–06:00)',t:'number'},{k:'bhM',l:'Bank holiday multiplier',t:'number'},{k:'bh',l:'Bank holiday dates (YYYY-MM-DD, comma separated)',t:'ta'}],S.cfg,o=>db.doc('settings/main').set(o))}
+</script></body></html>
